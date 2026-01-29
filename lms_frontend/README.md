@@ -1,82 +1,53 @@
-# Lightweight React Template for KAVIA
+# Lightweight React Template for KAVIA (LMS Frontend)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+This is a minimal Create React App (CRA) frontend used to validate backend APIs. It includes Login/Sign-up screens wired to the backend JWT auth endpoints.
 
-## Features
+## Quickstart
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
-
-## Getting Started
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-### `npm test`
-
-Launches the test runner in interactive watch mode.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-## Customization
-
-### Colors
-
-The main brand colors are defined as CSS variables in `src/App.css`:
-
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
+```bash
+npm install
+npm start
 ```
 
-### Components
+## Configure backend URL
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+Create a `.env` file in `lms_frontend/` (CRA requires `REACT_APP_` prefix):
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+```bash
+REACT_APP_API_BASE_URL=http://localhost:4000
+```
 
-## Learn More
+Notes:
+- The frontend calls:
+  - `POST /auth/register`
+  - `POST /auth/login`
+  - `GET /auth/me`
+- After login/sign-up, the JWT is stored in `localStorage` (interim approach) and sent as `Authorization: Bearer <token>` on authenticated requests.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## How to test
 
-### Code Splitting
+1. Start the backend (make sure CORS allows `http://localhost:3000`).
+2. Start this frontend (`npm start`).
+3. Visit:
+   - `/signup` to create an account
+   - `/login` to sign in
+   - `/dashboard` (protected) to confirm route guarding and `/auth/me` hydration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## UI notes
 
-### Analyzing the Bundle Size
+Theme is "Ocean Professional" (Classic) with:
+- Clean form inputs
+- Loading states (button text changes)
+- Inline error display
+- A top nav showing Login/Sign-up (guest) and Logout (authenticated)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Default CRA scripts
 
-### Making a Progressive Web App
+### `npm start`
+Runs the app in development mode at http://localhost:3000.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### `npm test`
+Launches the test runner.
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### `npm run build`
+Builds the app for production.
