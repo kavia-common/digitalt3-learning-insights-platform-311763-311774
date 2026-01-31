@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { apiRequest } from '../api/client';
+import { apiRequest, setApiAuthToken } from '../api/client';
 import { clearStoredToken, getStoredToken, setStoredToken } from './tokenStorage';
 
 const AuthContext = createContext(null);
@@ -47,6 +47,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    // Keep axios auth header in sync with current token.
+    setApiAuthToken(token);
     bootstrap(token);
   }, [bootstrap, token]);
 
@@ -86,6 +88,28 @@ export function AuthProvider({ children }) {
   }, []);
 
   // PUBLIC_INTERFACE
+  const mockLogin = useCallback(() => {
+    /**
+     * Mock login bypass:
+     * - Allows opening /dashboard without any backend-auth requirement.
+     * - Uses a synthetic token that is NOT valid for backend auth, but keeps ProtectedRoute happy.
+     * - API calls that require real auth may still fail (but courses/lessons are typically public for listing).
+     */
+    const fakeToken = 'mock-token';
+    const fakeUser = normalizeUser({
+      id: 'mock-user',
+      email: 'mock.user@digitalt3.local',
+      name: 'Mock User',
+      role: 'learner',
+    });
+
+    setStoredToken(fakeToken);
+    setToken(fakeToken);
+    setUser(fakeUser);
+    return { token: fakeToken, user: fakeUser };
+  }, []);
+
+  // PUBLIC_INTERFACE
   const logout = useCallback(() => {
     clearStoredToken();
     setToken(null);
@@ -100,9 +124,10 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(token && user),
       login,
       register,
+      mockLogin,
       logout,
     }),
-    [token, user, isLoading, login, register, logout]
+    [token, user, isLoading, login, register, mockLogin, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

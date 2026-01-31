@@ -1,9 +1,11 @@
 /**
- * Lightweight API client for the LMS backend.
+ * Axios API client for the LMS backend.
  *
- * Uses fetch and an env-driven base URL.
+ * Uses an env-driven base URL.
  * In CRA, environment variables must be prefixed with REACT_APP_.
  */
+
+import axios from 'axios';
 
 const DEFAULT_BASE_URL = 'http://localhost:4000';
 
@@ -15,47 +17,74 @@ export function getApiBaseUrl() {
   return (process.env.REACT_APP_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, '');
 }
 
-function buildUrl(path) {
-  const base = getApiBaseUrl();
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${normalizedPath}`;
+/**
+ * Normalize various backend/axios error shapes into a stable { message, status, data } shape.
+ */
+function normalizeApiError(err) {
+  // Axios error with response
+  if (err?.response) {
+    const status = err.response.status;
+    const data = err.response.data;
+    const message =
+      data?.message ||
+      data?.error ||
+      (typeof data === 'string' ? data : '') ||
+      `Request failed with status ${status}`;
+
+    const normalized = new Error(message);
+    normalized.status = status;
+    normalized.data = data;
+    return normalized;
+  }
+
+  // Axios error without response (network / CORS / DNS)
+  if (err?.request) {
+    const normalized = new Error('Network error: could not reach API server.');
+    normalized.status = 0;
+    normalized.data = null;
+    return normalized;
+  }
+
+  // Unknown
+  const normalized = new Error(err?.message || 'Unknown error');
+  normalized.status = err?.status || 0;
+  normalized.data = err?.data || null;
+  return normalized;
 }
 
-async function parseJsonOrText(res) {
-  const contentType = res.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) {
-    return res.json();
+/**
+ * Shared axios instance.
+ * - withCredentials is enabled for future compatibility with cookie-based auth.
+ */
+export const api = axios.create({
+  baseURL: getApiBaseUrl(),
+  withCredentials: true,
+});
+
+/**
+ * PUBLIC_INTERFACE
+ * Sets (or clears) the Authorization bearer token on the shared axios instance.
+ */
+export function setApiAuthToken(token) {
+  if (token) {
+    api.defaults.headers.common.Authorization = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common.Authorization;
   }
-  const text = await res.text();
-  return text ? { message: text } : {};
 }
 
 /**
  * PUBLIC_INTERFACE
- * Performs a JSON request against the backend.
+ * Performs a request against the backend with normalized error handling.
  *
- * - Adds Authorization: Bearer <token> if provided.
- * - Uses credentials: 'include' for future compatibility with cookie-based auth.
+ * Prefer using `api.get/post/...` directly for simple calls; use this helper when you
+ * want a stable thrown Error shape across the app.
  */
-export async function apiRequest(path, { method = 'GET', token, body, headers } = {}) {
-  const res = await fetch(buildUrl(path), {
-    method,
-    headers: {
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(headers || {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    credentials: 'include',
-  });
-
-  const data = await parseJsonOrText(res);
-  if (!res.ok) {
-    const message = data?.message || `Request failed with status ${res.status}`;
-    const err = new Error(message);
-    err.status = res.status;
-    err.data = data;
-    throw err;
+export async function apiRequest(config) {
+  try {
+    const res = await api.request(config);
+    return res.data;
+  } catch (err) {
+    throw normalizeApiError(err);
   }
-  return data;
 }

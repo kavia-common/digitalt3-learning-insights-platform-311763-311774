@@ -1,9 +1,10 @@
 import React from 'react';
 import { useAuth } from '../auth/AuthContext';
+import CourseGallery from '../components/CourseGallery';
 
 /**
  * PUBLIC_INTERFACE
- * Protected placeholder dashboard.
+ * Dashboard showing authenticated user info and a Course Gallery (paginated + filtered).
  */
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -29,6 +30,8 @@ export default function DashboardPage() {
               <div className="value">{user?.role}</div>
             </div>
           </div>
+
+          <CourseGallery />
         </div>
       </div>
     </div>

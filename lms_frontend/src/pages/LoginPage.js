@@ -11,7 +11,7 @@ function isValidEmail(email) {
  * Login page (email + password) wired to POST /auth/login.
  */
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, mockLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,6 +47,16 @@ export default function LoginPage() {
       setError(err?.message || 'Login failed. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onMockLogin = async () => {
+    setError('');
+    try {
+      mockLogin();
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(err?.message || 'Mock login failed.');
     }
   };
 
@@ -97,6 +107,15 @@ export default function LoginPage() {
               <Link className="link" to="/signup">
                 Need an account? Sign up
               </Link>
+            </div>
+
+            <div className="row" style={{ marginTop: 8 }}>
+              <button className="btn btn-secondary" type="button" onClick={onMockLogin} disabled={isSubmitting}>
+                Mock Login (bypass)
+              </button>
+              <span className="field-help">
+                For demos: skips real auth and takes you straight to the Dashboard.
+              </span>
             </div>
           </form>
 
